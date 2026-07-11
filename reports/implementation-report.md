@@ -1,5 +1,7 @@
 # Krea 2 → 场景线性 HDR:实施与验证报告
 
+*[English](implementation-report-EN.md) · 中文*
+
 > 配套文档:
 > - 本报告:**实际实现、训练、测试、ComfyUI 落地的记录与结果**
 > - 代码:`hdr_cpu_validation/`(CPU 验证 + 工具)、`comfyui_krea_hdr/`(ComfyUI 节点)、`training/`(数据集+训练)
