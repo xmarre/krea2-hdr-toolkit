@@ -73,10 +73,13 @@ def logc4_fwd(L):
     return np.where(L >= _C4_t, hi, lo)
 
 def logc4_inv(V):
+    # ARRI LogC4 spec: the log branch is used for every code E' >= 0 (it reaches the
+    # linear toe value t at E' = 0 and 0.0 at E' = c); the linear branch applies only to
+    # E' < 0. Switching at E' >= c instead is discontinuous at c (jump of ~0.0075).
     V = np.asarray(V, dtype=np.float64)
     hi = (np.power(2.0, 14.0 * (V - _C4_c) / _C4_b + 6.0) - 64.0) / _C4_a
     lo = V * _C4_s + _C4_t
-    return np.where(V >= _C4_c, hi, lo)
+    return np.where(V >= 0.0, hi, lo)
 
 
 # ----------------------------------------------------------------------------
