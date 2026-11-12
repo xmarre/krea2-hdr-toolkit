@@ -43,13 +43,13 @@ ENCODE_REF = [
 
 
 def load_node_module():
-    """Import comfyui_krea_hdr without ComfyUI: stub folder_paths (and torch if absent)."""
+    """Import the node pack (repository root __init__.py) without ComfyUI: stub folder_paths (and torch if absent)."""
     sys.modules.setdefault("folder_paths", types.ModuleType("folder_paths"))
     try:
         import torch  # noqa: F401
     except ImportError:
         sys.modules["torch"] = types.ModuleType("torch")
-    path = os.path.join(HERE, "..", "comfyui", "comfyui_krea_hdr", "__init__.py")
+    path = os.path.join(HERE, "..", "__init__.py")
     spec = importlib.util.spec_from_file_location("comfyui_krea_hdr_under_test", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

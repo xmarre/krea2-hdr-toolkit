@@ -1,10 +1,11 @@
-# comfyui_krea_hdr — run the Krea2 scene-linear HDR LoRA in ComfyUI
+# Krea2 HDR node pack — run the Krea2 scene-linear HDR LoRA in ComfyUI
 
 Verified end-to-end in ComfyUI v0.27.0: Krea2 + this LoRA → native graph → real
 scene-linear HDR EXR (peak 459×, 8.7 stops).
 
 ## Install
-1. Copy this folder to `ComfyUI/custom_nodes/comfyui_krea_hdr`, restart ComfyUI.
+1. Clone or copy the whole repository into `ComfyUI/custom_nodes/` and restart ComfyUI.
+   The node pack is the repository root `__init__.py`, so ComfyUI loads it directly.
    (needs `OpenEXR` importable in ComfyUI's Python; v3.x is fine.)
 2. Put the model files in ComfyUI's folders:
    - `models/diffusion_models/krea2_raw.safetensors`  (Krea-2 RAW DiT)
@@ -59,6 +60,6 @@ VAELoader(qwen vae) ────┘                          EmptySD3LatentImage
   if that looks like a normal contrasty photo rather than a flat, grey log image, the
   latent is display-referred.
 - To view the EXR on an HDR screen, convert to PQ/BT.2020 AVIF (see
-  `../hdr_cpu_validation/to_display_hdr.py`). The EXR itself is for render/IBL (Blender,
+  `../tools/to_display_hdr.py`). The EXR itself is for render/IBL (Blender,
   Nuke, Unreal — set the texture to linear / non-sRGB).
 ```

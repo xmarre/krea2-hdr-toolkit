@@ -1,7 +1,8 @@
 """
 ComfyUI custom nodes for the Krea2 scene-linear HDR LoRA pipeline.
 
-Drop this folder into  ComfyUI/custom_nodes/  and restart.
+Clone or copy this repository into  ComfyUI/custom_nodes/  and restart (this file is the
+node pack entry point, so it has to stay at the repository root).
 
 Why these nodes exist
 ---------------------

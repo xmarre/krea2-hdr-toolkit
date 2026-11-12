@@ -16,7 +16,7 @@
 ## 安装
 
 ```bash
-pip install -r requirements.txt
+pip install -r tools/requirements.txt   # CPU 工具(根目录 requirements.txt 仅供 ComfyUI 节点)
 # HDR-AVIF 导出还需系统工具:  apt-get install -y ffmpeg libavif-bin
 # GPU 项(真 VAE 往返)可选:   pip install "torch>=2.4" "diffusers>=0.39"
 ```
@@ -26,11 +26,12 @@ pip install -r requirements.txt
 
 ```
 krea2-hdr-toolkit/
+├── __init__.py       ComfyUI 节点包(整个仓库即自定义节点)
 ├── tools/            所有 CPU 工具(扁平,import 互通;在此目录内运行)
-├── comfyui/          ComfyUI 节点包 + 工作流 + LoRA 重映射
+├── comfyui/          ComfyUI 工作流 + LoRA 重映射 + 节点说明
 ├── dataset/          数据集卡 + manifests(图像可由 build_dataset.py 重建)
 ├── reports/          完整报告(PDF + md)+ 图表包(figures/)
-└── requirements.txt
+└── requirements.txt  仅 ComfyUI 节点依赖
 ```
 
 ## 核心概念(30 秒)
@@ -90,10 +91,10 @@ python3 to_display_hdr.py out.exr  out.avif     # EXR → HDR AVIF(PQ/BT.2020,�
 ### 5) ComfyUI(`comfyui/`)
 ```bash
 # ① 重映射 LoRA(musubi 命名 → ComfyUI;不做则 0/264 不匹配、LoRA 无效)
-cd comfyui/comfyui_krea_hdr
+cd comfyui
 python3 remap_lora_for_comfyui.py in.safetensors out_COMFYUI.safetensors /path/to/ComfyUI /path/to/raw.safetensors
-# ② 把 comfyui_krea_hdr/ 放进 ComfyUI/custom_nodes/;LoRA 放 models/loras/
-# ③ 用 comfyui/workflow_krea2_hdr_api.json,或按 comfyui_krea_hdr/README.md 连图
+# ② 把整个仓库克隆/复制到 ComfyUI/custom_nodes/(节点包即根目录 __init__.py);LoRA 放 models/loras/
+# ③ 用 comfyui/workflow_krea2_hdr_api.json,或按 comfyui/README.md 连图
 ```
 两个节点:**LogC4ToLinear**(VAEDecode 后)+ **Save EXR Scene-Linear**(32-bit 无 clamp)。
 > **关键坑**:**不要加 ModelSamplingSD3/shift 节点**——Krea2 已自带 shift,再加会双重 shift 过曝发白。绝不用内置 SaveImage 存 HDR(8-bit+clamp)。

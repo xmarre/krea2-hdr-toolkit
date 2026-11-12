@@ -22,7 +22,7 @@ Model weights are **not** in this repo (see [Weights & data](#weights--data)). T
 ## Install
 
 ```bash
-pip install -r requirements.txt
+pip install -r tools/requirements.txt   # CPU tools (the root requirements.txt is only the ComfyUI node's)
 # HDR-AVIF export also needs system tools:  apt-get install -y ffmpeg libavif-bin
 # optional GPU step (real VAE round-trip):  pip install "torch>=2.4" "diffusers>=0.39"
 ```
@@ -32,11 +32,12 @@ pip install -r requirements.txt
 
 ```
 krea2-hdr-toolkit/
+├── __init__.py       ComfyUI node pack (the repo itself is the custom node)
 ├── tools/            all CPU tools (flat; imports interop; run from this dir)
-├── comfyui/          ComfyUI node pack + workflow + LoRA remap
+├── comfyui/          ComfyUI workflow + LoRA remap + node README
 ├── dataset/          dataset card + manifests (images rebuildable via build_dataset.py)
 ├── reports/          full report (PDF + md) + figure package (figures/)
-└── requirements.txt
+└── requirements.txt  ComfyUI node dependencies only
 ```
 
 ## Core concept (30 s)
@@ -102,10 +103,10 @@ python3 to_display_hdr.py out.exr  out.avif     # EXR → HDR AVIF (PQ/BT.2020 f
 ### 5) ComfyUI (`comfyui/`)
 ```bash
 # ① Remap the LoRA (musubi key names → ComfyUI; without this 0/264 keys match and the LoRA does nothing)
-cd comfyui/comfyui_krea_hdr
+cd comfyui
 python3 remap_lora_for_comfyui.py in.safetensors out_COMFYUI.safetensors /path/to/ComfyUI /path/to/raw.safetensors
-# ② Put comfyui_krea_hdr/ in ComfyUI/custom_nodes/; put the LoRA in models/loras/
-# ③ Use comfyui/workflow_krea2_hdr_api.json, or wire it per comfyui_krea_hdr/README.md
+# ② Clone/copy this whole repository into ComfyUI/custom_nodes/ (the node pack is the root __init__.py); put the LoRA in models/loras/
+# ③ Use comfyui/workflow_krea2_hdr_api.json, or wire it per comfyui/README.md
 ```
 Two nodes: **LogC4ToLinear** (after VAEDecode) + **Save EXR Scene-Linear** (32-bit, no clamp).
 > **Key gotcha:** do **not** add a ModelSamplingSD3/shift node — Krea2 already applies its shift; a second one double-shifts and washes the image out. Never use the built-in SaveImage for HDR (8-bit + clamp).
