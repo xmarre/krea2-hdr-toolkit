@@ -1,7 +1,8 @@
 """
 ComfyUI custom nodes for the Krea2 scene-linear HDR LoRA pipeline.
 
-Drop this folder into  ComfyUI/custom_nodes/  and restart.
+Clone or copy this repository into  ComfyUI/custom_nodes/  and restart (this file is the
+node pack entry point, so it has to stay at the repository root).
 
 Why these nodes exist
 ---------------------
@@ -34,10 +35,29 @@ _S = (7.0 * np.log(2.0) * 2.0 ** (7.0 - 14.0 * _C / _B)) / (_A * _B)
 _T = (2.0 ** (14.0 * (-_C / _B) + 6.0) - 64.0) / _A
 
 def logc4_to_linear(V):
+    # ARRI LogC4 spec: log branch for every code E' >= 0, linear branch only for E' < 0.
+    # (Switching at E' >= C is discontinuous at C by ~0.0075 scene-linear.)
     V = np.asarray(V, np.float64)
     hi = (np.power(2.0, 14.0 * (V - _C) / _B + 6.0) - 64.0) / _A
     lo = V * _S + _T
-    return np.where(V >= _C, hi, lo)
+    return np.where(V >= 0.0, hi, lo)
+
+
+# A LogC4 encoding of non-negative scene-linear light never goes below code C (= linear 0).
+# In the LoRA training set (inverse of build_dataset.py) no image has more than ~0.02% of its
+# pixels with any channel below C. Display-referred (sRGB-like) images routinely have 10-30%.
+# Decoding such an image as LogC4 is a domain error: shadows turn negative, mid-tones and
+# diffuse surfaces land at several times diffuse white, and channel ratios are exaggerated.
+LOGC4_BELOW_BLACK_WARN = 0.01
+
+
+def logc4_domain_stats(code):
+    """Per-image statistics of [0,1] codes (H,W,C) vs the LogC4 training domain."""
+    rgb = np.asarray(code, np.float32)[..., :3]
+    below = float((rgb < _C).any(axis=-1).mean())
+    med = np.median(rgb.reshape(-1, 3), axis=0)
+    return {"frac_below_logc4_black": below, "median_code_rgb": [float(m) for m in med],
+            "looks_logc4": below <= LOGC4_BELOW_BLACK_WARN}
 
 
 class LogC4ToLinear:
@@ -55,6 +75,18 @@ class LogC4ToLinear:
 
     def decode(self, image, exposure):
         x = image.detach().cpu().float().numpy()          # (B,H,W,C) in [0,1]
+        for b in range(x.shape[0]):
+            st = logc4_domain_stats(x[b])
+            med = ", ".join(f"{m:.3f}" for m in st["median_code_rgb"])
+            print(f"[LogC4ToLinear] image {b}: {100 * st['frac_below_logc4_black']:.2f}% of pixels "
+                  f"below LogC4 black (code {_C:.4f}), median code RGB=({med})")
+            if not st["looks_logc4"]:
+                print(f"[LogC4ToLinear] WARNING image {b}: input does not look LogC4-encoded "
+                      f"(LogC4 training images have <= {100 * LOGC4_BELOW_BLACK_WARN:.0f}% of pixels "
+                      f"below LogC4 black). It is most likely an ordinary display-referred image; "
+                      f"decoding it as LogC4 gives negative shadows and greatly over-bright mid-tones. "
+                      f"Exposure or tone mapping cannot correct this - the sampled latent itself "
+                      f"is not in the LogC4 domain.")
         lin = logc4_to_linear(np.clip(x, 0.0, 1.0)) * float(exposure)
         return (torch.from_numpy(np.ascontiguousarray(lin.astype(np.float32))),)
 
