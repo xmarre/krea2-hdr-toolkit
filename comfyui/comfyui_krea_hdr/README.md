@@ -47,6 +47,17 @@ VAELoader(qwen vae) ────┘                          EmptySD3LatentImage
   values >1 appear only after "LogC4 to Linear". No VAEDecode patch needed.
 - **Never use the built-in SaveImage** (8-bit, clamps → HDR lost). Use this pack's
   SaveEXR, or ComfyUI-HQ-Image-Save with tonemap="linear", fed by LogC4-to-Linear.
+- **Check the input domain in the console.** For every image, *LogC4 to Linear* logs the
+  fraction of pixels below LogC4 black (code 0.0929 = scene-linear 0) and the median code.
+  LoRA training images have essentially none (max 0.02% across the 320-image dataset); an
+  ordinary display-referred (sRGB-looking) image typically has 10–30%. Above 1% the node
+  prints a WARNING: the sampled latent is not LogC4, and decoding it as LogC4 makes shadows
+  negative and mid-tones/diffuse surfaces several to hundreds of times too bright with
+  exaggerated channel ratios (sRGB code 0.5 → 2.2×, 0.7 → 19×, 0.9 → 161× scene-linear).
+  Exposure, tone mapping or the EXR writer cannot fix that; it has to be fixed in what the
+  sampler generates. A quick cross-check: decode the same latent with an SDR VAE path —
+  if that looks like a normal contrasty photo rather than a flat, grey log image, the
+  latent is display-referred.
 - To view the EXR on an HDR screen, convert to PQ/BT.2020 AVIF (see
   `../hdr_cpu_validation/to_display_hdr.py`). The EXR itself is for render/IBL (Blender,
   Nuke, Unreal — set the texture to linear / non-sRGB).

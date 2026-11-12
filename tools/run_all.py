@@ -6,6 +6,7 @@ STEPS = [
     ("EXR round-trip + failure modes",        "test_exr_roundtrip.py"),
     ("Dataset prep + real-data restoration",  "dataset_prep.py"),
     ("HLG vs LogC4 comparison",               "test_hlg_vs_logc4.py"),
+    ("LogC4 vs ARRI reference + node domain check", "test_logc4_reference.py"),
 ]
 for title, script in STEPS:
     print("\n" + "#" * 90 + f"\n# {title}\n" + "#" * 90)
